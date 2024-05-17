@@ -186,7 +186,7 @@ void SLPrefabSequenceEditor::Construct(const FArguments& InArgs)
 			.Value(0.2f)
 			[
 				SNew(SBox)
-				.IsEnabled_Lambda([=]() {
+				.IsEnabled_Lambda([=, this]() {
 					return WeakSequenceComponent.IsValid();
 				})
 				[
@@ -203,7 +203,7 @@ void SLPrefabSequenceEditor::Construct(const FArguments& InArgs)
 							.AutoWidth()
 							[
 								SNew(SButton)
-								.Text_Lambda([=](){
+								.Text_Lambda([=, this](){
 									if (WeakSequenceComponent.IsValid())
 									{
 										auto Actor = WeakSequenceComponent->GetOwner();
@@ -216,12 +216,12 @@ void SLPrefabSequenceEditor::Construct(const FArguments& InArgs)
 									return LOCTEXT("NullSequenceComponent", "Null (LPrefabSequence)");
 								})
 								.ToolTipText(LOCTEXT("ObjectButtonTooltipText", "Actor.Component, click to select target"))
-								.IsEnabled_Lambda([=](){
+								.IsEnabled_Lambda([=, this](){
 									return WeakSequenceComponent.IsValid();
 								})
 								.ButtonStyle( FAppStyle::Get(), "PropertyEditor.AssetComboStyle" )
 								.ForegroundColor(FAppStyle::GetColor("PropertyEditor.AssetName.ColorAndOpacity"))
-								.OnClicked_Lambda([=](){
+								.OnClicked_Lambda([=, this](){
 									if (WeakSequenceComponent.IsValid())
 									{
 										GEditor->SelectNone(true, true);
@@ -236,7 +236,7 @@ void SLPrefabSequenceEditor::Construct(const FArguments& InArgs)
 							.VAlign(VAlign_Center)
 							[
 								PropertyCustomizationHelpers::MakeResetButton(
-									FSimpleDelegate::CreateLambda([=]() {
+									FSimpleDelegate::CreateLambda([=, this]() {
 										AssignLPrefabSequenceComponent(nullptr);
 										})
 									, LOCTEXT("ClearSequenceComponent", "Click to clear current selected LGUISequenceComponent, so we will not edit it here.")
@@ -477,7 +477,7 @@ TSharedPtr<SWidget> SLPrefabSequenceEditor::OnContextMenuOpening()const
 						LOCTEXT("TryFixObjectReference", "Try fix object reference"),
 						LOCTEXT("TryFixObjectReference_Tooltip", "LGUI can search target object by actor's path relative to ContextActor (Owner actor of LPrefabSequenceComponent), so if ActorLabel and Actor's hierarchy is same as before, it is possible to fix the bad tracks."),
 						FSlateIcon(),
-						FUIAction(FExecuteAction::CreateLambda([=]() {
+						FUIAction(FExecuteAction::CreateLambda([=, this]() {
 							SelectedItem->Animation->FixObjectReferences(WeakSequenceComponent->GetOwner());
 							}))
 					);
