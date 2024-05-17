@@ -19,7 +19,7 @@
 #include "PrefabSystem/LPrefab.h"
 #include "PrefabSystem/LPrefabHelperObject.h"
 
-PRAGMA_DISABLE_OPTIMIZATION
+UE_DISABLE_OPTIMIZATION
 
 FLPrefabEditorOutliner::~FLPrefabEditorOutliner()
 {
@@ -248,5 +248,5 @@ void FLPrefabEditorOutliner::GetUnexpendActor(TArray<AActor*>& InOutAllActors)co
 	}
 }
 
-PRAGMA_ENABLE_OPTIMIZATION
+UE_ENABLE_OPTIMIZATION
 

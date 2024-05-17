@@ -3,7 +3,6 @@
 #include "LPrefabUtils.h"
 #include "LPrefabModule.h"
 #include "Sound/SoundBase.h"
-#include "Engine/Texture.h"
 #include "Engine/Texture2D.h"
 #include "TextureResource.h"
 #if WITH_EDITOR
@@ -14,7 +13,7 @@
 #endif
 
 #if LEXPREFAB_CAN_DISABLE_OPTIMIZATION
-PRAGMA_DISABLE_OPTIMIZATION
+UE_DISABLE_OPTIMIZATION
 #endif
 
 void LPrefabUtils::DestroyActorWithHierarchy(AActor* Target, bool WithHierarchy)
@@ -311,5 +310,5 @@ void LPrefabUtils::LogClassFlags(UClass* cls)
 }
 
 #if LEXPREFAB_CAN_DISABLE_OPTIMIZATION
-PRAGMA_ENABLE_OPTIMIZATION
+UE_ENABLE_OPTIMIZATION
 #endif

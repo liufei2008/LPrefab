@@ -19,7 +19,7 @@
 #include "UObject/ObjectSaveContext.h"
 #include "PrefabSystem/LPrefabManager.h"
 
-PRAGMA_DISABLE_OPTIMIZATION
+UE_DISABLE_OPTIMIZATION
 
 #define LOCTEXT_NAMESPACE "LPrefabNativeSceneOutlinerExtension"
 FLPrefabNativeSceneOutlinerExtension::FLPrefabNativeSceneOutlinerExtension()
@@ -331,4 +331,4 @@ void FLPrefabNativeSceneOutlinerExtension::RestoreSceneOutlinerState()
 }
 #undef LOCTEXT_NAMESPACE
 
-PRAGMA_ENABLE_OPTIMIZATION
+UE_ENABLE_OPTIMIZATION
