@@ -1,0 +1,29 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "LPrefab",
+	"Description": "Lex-Prefab, a Unity-like prefab workflow",
+	"Category": "LexPlugin",
+	"CreatedBy": "LexLiu",
+	"CreatedByURL": "",
+	"DocsURL": "https://liufei2008.github.io/",
+	"MarketplaceURL": "",
+	"SupportURL": "707908214@qq.com",
+	"EngineVersion": "5.1.0",
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "LPrefab",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [ "Win64", "Mac", "Linux", "IOS", "Android" ]
+		},
+		{
+			"Name": "LPrefabEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [ "Win64", "Mac", "Linux" ]
+		}
+	]
+}

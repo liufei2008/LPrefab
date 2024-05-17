@@ -1,0 +1,333 @@
+﻿// Copyright 2019-Present LexLiu. All Rights Reserved.
+
+#pragma once
+#include "CoreMinimal.h"
+#include "Misc/NetworkVersion.h"
+#include "Engine/EngineBaseTypes.h"
+#include "LPrefab.generated.h"
+
+#define LPREFAB_SERIALIZER_NEWEST_INCLUDE "PrefabSystem/ActorSerializer8.h"
+#define LPREFAB_SERIALIZER_NEWEST_NAMESPACE LPrefabSystem8
+
+enum class ELPrefabVersion : uint16
+{
+	/** Version 2: Support ActorGuid (start from 4.26). */
+	OldVersion = 2,
+	/**
+	 * Version 3: Use UE's build-in FArchive to serialize/deserialize.
+	 *		Compare to version2: 1. About 2~3 times faster when deserialize.
+	 *							 2. Smaller disc space take.
+	 *							 3. Support CoreRedirects.
+	 *							 4. Support object flags.
+	 *							 5. Support all object serialization and reference, inlude default sub object and component.
+	 */
+	BuildinFArchive = 3,
+	/** Support nested default sub object. */
+	NestedDefaultSubObject = 4,
+	/** Support UObject name. */
+	ObjectName = 5,
+	/** Support common actor types, not just UI actor. */
+	CommonActor = 6,
+	/** Support add new actor under subprefab's actor. */
+	ActorAttachToSubPrefab = 7,
+	/**
+	 * This version is mainly to solve the case:
+	 *		There are Prefabs, A is origin prefab, B contains A, C contains B,
+	 *		open A and add a new object O to A (new Actor or ActorComponent or other UObject), apply A then close,
+	 *		then open C and modify property on object O, apply C then close,
+	 *		open C again, here error happens, because O is not exist in B yet, so B will alway create new guid for O, then pass to C as subprefab, so when open C again, the modified property on O will missing, because subprefab's guid on O is changed.
+	 * Solusion:
+	 *		Use a map data D, map from object's unique id (subprefab's root actor's guid and new created object's origin guid --origin guid means the object's guid in root prefab) to created guid,
+	 *		when load subprefab, if not find guid then create a new guid and store it in data D, next time when load subprefab if still don't find the guid (because B create a new guid for it) then search in data D and use existing guid,
+	 *		so the guid can persist.
+	 */
+	NewObjectOnNestedPrefab = 8,
+
+	/** new version must be added before this line. */
+	MAX_NO_USE,
+	NEWEST = MAX_NO_USE - 1,
+};
+
+/**
+ * Current prefab system version
+ */
+#define LPREFAB_CURRENT_VERSION (uint16)ELPrefabVersion::NEWEST
+
+class ULPrefab;
+class ULPrefabHelperObject;
+
+USTRUCT(NotBlueprintType)
+struct LPREFAB_API FLPrefabOverrideParameterData
+{
+	GENERATED_BODY()
+public:
+	FLPrefabOverrideParameterData() {};
+
+	UPROPERTY(EditAnywhere, Category = "LPrefab")
+		TWeakObjectPtr<UObject> Object;
+	/** UObject's member property name */
+	UPROPERTY(EditAnywhere, Category = "LPrefab")
+		TArray<FName> MemberPropertyNames;
+};
+
+/** Unique id for newly created object in subprefab, just for store data here. Check description on ELPrefabVersion.NewObjectOnNestedPrefab */
+USTRUCT(NotBlueprintType)
+struct FLPrefabSubPrefabObjectUniqueId
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, Category = "LPrefab")
+		FGuid RootActorGuidInParentPrefab;
+	UPROPERTY(EditAnywhere, Category = "LPrefab")
+		FGuid ObjectGuidInOrignPrefab;
+
+	bool operator==(const FLPrefabSubPrefabObjectUniqueId& other)const
+	{
+		return this->RootActorGuidInParentPrefab == other.RootActorGuidInParentPrefab && this->ObjectGuidInOrignPrefab == other.ObjectGuidInOrignPrefab;
+	}
+	friend FORCEINLINE uint32 GetTypeHash(const FLPrefabSubPrefabObjectUniqueId& other)
+	{
+		return HashCombine(GetTypeHash(other.RootActorGuidInParentPrefab), GetTypeHash(other.ObjectGuidInOrignPrefab));
+	}
+};
+
+USTRUCT(NotBlueprintType)
+struct LPREFAB_API FLSubPrefabData
+{
+	GENERATED_BODY()
+public:
+	FLSubPrefabData();
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")TObjectPtr<ULPrefab> PrefabAsset = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")TArray<FLPrefabOverrideParameterData> ObjectOverrideParameterArray;
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")TMap<FGuid, FGuid> MapObjectGuidFromParentPrefabToSubPrefab;
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")TMap<FLPrefabSubPrefabObjectUniqueId, FGuid> MapObjectIdToNewlyCreatedId;
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")TMap<FGuid, TObjectPtr<UObject>> MapGuidToObject;
+#if WITH_EDITORONLY_DATA
+	/** For level editor, combine all create time (include all sub prefab) to create this MD5, to tell if this prefab is latest version. */
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")FString OverallVersionMD5;
+	/** For level editor, true means it will not show a dialog box and do the update if detect new version. */
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")bool bAutoUpdate = true;
+	/** Temporary color for quick identify in editor */
+	FLinearColor EditorIdentifyColor;
+#endif
+public:
+	void AddMemberProperty(UObject* InObject, FName InPropertyName);
+	void AddMemberProperty(UObject* InObject, const TArray<FName>& InPropertyNames);
+	void RemoveMemberProperty(UObject* InObject, FName InPropertyName);
+	void RemoveMemberProperty(UObject* InObject);
+	/** 
+	 * Check parameters, remove invalid.
+	 * @return true if anything changed.
+	 */
+	bool CheckParameters();
+};
+
+USTRUCT(NotBlueprintType)
+struct FLPrefabDataForPrefabEditor
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+		FVector ViewLocation = FVector::ZeroVector;
+	UPROPERTY()
+		FRotator ViewRotation = FRotator::ZeroRotator;
+	UPROPERTY()
+		FVector ViewOrbitLocation = FVector::ZeroVector;
+	UPROPERTY()
+		FIntPoint CanvasSize = FIntPoint(1920, 1080);
+	UPROPERTY()
+		bool bNeedCanvas = true;//do we need LGUICanvas component? default is true
+	UPROPERTY()
+		uint8 CanvasRenderMode = 0;//default LGUICanvas's render mode is ELGUIRenderMode::ScreenSpaceOverlay
+	UPROPERTY()
+		TEnumAsByte<EViewModeIndex> ViewMode = EViewModeIndex::VMI_Lit;//editor viewport's viewmode
+	UPROPERTY()
+		TSet<FGuid> UnexpendActorSet;
+};
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FLPrefab_LoadPrefabCallback, AActor*, LoadedRootActor);
+
+/**
+ * Similar to Unity3D's Prefab. Store actor and it's hierarchy and serailize to asset, deserialize and restore when needed.
+ * If you don't want to package the prefab for runtime (only use in editor), you can put the prefab in a folder named "EditorOnly".
+ */
+UCLASS(ClassGroup = (LPrefab), BlueprintType)
+class LPREFAB_API ULPrefab : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	ULPrefab();
+	friend class FLPrefabCustomization;
+	friend class ULPrefabFactory;
+
+#if WITH_EDITORONLY_DATA
+private:
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")
+		bool bIsPrefabVariant = false;
+public:
+	/** put actural UObject in this array, and store index in prefab */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LPrefab")
+		TArray<TObjectPtr<UObject>> ReferenceAssetList;
+	/** put actural UClass in this array, and store index in prefab */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LPrefab")
+		TArray<TObjectPtr<UClass>> ReferenceClassList;
+	/** put actural FName in this array, and store index in prefab */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LPrefab")
+		TArray<FName> ReferenceNameList;
+#pragma region Before Prefab-Version 3
+	/** put actural FString in this array, and store index in prefab */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LPrefab")
+		TArray<FString> ReferenceStringList;
+	/** put actural FText in this array, and store index in prefab */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LPrefab")
+		TArray<FText> ReferenceTextList;
+#pragma endregion Before Prefab-Version 3
+#endif
+
+#if WITH_EDITORONLY_DATA
+public:
+	/** serialized data for editor use, this data contains editor-only property include property's name, will compare property name when deserialize form this */
+	UPROPERTY()
+		TArray<uint8> BinaryData;
+	/** The time point when create/save this prefab. Use UtcNow from prefab version 6. */
+	UPROPERTY(VisibleAnywhere, Category = "LPrefab")
+		FDateTime CreateTime;
+#endif
+	/** Prefab system's version when creating this prefab */
+	UPROPERTY()
+		uint16 PrefabVersion;
+	/** Engine's major version when creating this prefab */
+	UPROPERTY()
+		uint16 EngineMajorVersion;
+	/** Engine's minor version when creating this prefab */
+	UPROPERTY()
+		uint16 EngineMinorVersion;
+	UPROPERTY()
+		uint16 EnginePatchVersion;
+#if WITH_EDITORONLY_DATA
+	UPROPERTY()int32 ArchiveVersion = (int32)EUnrealEngineObjectUE4Version::VER_UE4_CORRECT_LICENSEE_FLAG;//this default version is the time when LPrefab support FArchive version
+	UPROPERTY()int32 ArchiveVersionUE5 = -1;
+	UPROPERTY()int32 ArchiveLicenseeVer = (int32)EUnrealEngineObjectLicenseeUEVersion::VER_LIC_NONE;
+	UPROPERTY()uint32 ArEngineNetVer = (uint32)EEngineNetworkVersionHistory::HISTORY_REPLAY_DORMANCY;
+	UPROPERTY()uint32 ArGameNetVer = 0;
+#endif
+	UPROPERTY()int32 ArchiveVersion_ForBuild = (int32)EUnrealEngineObjectUE4Version::VER_UE4_CORRECT_LICENSEE_FLAG;//this default version is the time when LPrefab support FArchive version
+	UPROPERTY()int32 ArchiveVersionUE5_ForBuild = -1;
+	UPROPERTY()int32 ArchiveLicenseeVer_ForBuild = (int32)EUnrealEngineObjectLicenseeUEVersion::VER_LIC_NONE;
+	UPROPERTY()uint32 ArEngineNetVer_ForBuild = (uint32)EEngineNetworkVersionHistory::HISTORY_REPLAY_DORMANCY;
+	UPROPERTY()uint32 ArGameNetVer_ForBuild = 0;
+
+	/** build version for ReferenceAssetList */
+	UPROPERTY()
+		TArray<TObjectPtr<UObject>> ReferenceAssetListForBuild;
+	/** build version for ReferenceClassList */
+	UPROPERTY()
+		TArray<TObjectPtr<UClass>> ReferenceClassListForBuild;
+	/** build version for ReferenceNameList */
+	UPROPERTY()
+		TArray<FName> ReferenceNameListForBuild;
+	/**
+	 * serialized data for publish, not contain property name and editor only property. much more faster than BinaryData when deserialize
+	 */
+	UPROPERTY()
+		TArray<uint8> BinaryDataForBuild;
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(Instanced, Transient)
+		TObjectPtr<class UThumbnailInfo> ThumbnailInfo;
+	UPROPERTY(Transient)
+		bool ThumbnailDirty = false;
+	UPROPERTY()
+		FLPrefabDataForPrefabEditor PrefabDataForPrefabEditor;
+private:
+	UPROPERTY(VisibleAnywhere, Transient, Category = "LPrefab")
+		TObjectPtr<ULPrefabHelperObject> PrefabHelperObject = nullptr;
+#endif
+public:
+	/**
+	 * LoadPrefab to create actor.
+	 * Awake function in LGUILifeCycleBehaviour and LPrefabInterface will be called right after LoadPrefab is done.
+	 * @param InParent Parent scene component that the created root actor will be attached to. Can be null so the created root actor will not attach to anyone.
+	 * @param InCallbackBeforeAwake This callback function will execute before Awake event, parameter "Actor" is the loaded root actor.
+	 * @param SetRelativeTransformToIdentity Set created root actor's transform to zero after load.
+	 */
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay = "InCallbackBeforeAwake,SetRelativeTransformToIdentity", UnsafeDuringActorConstruction = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm = "InCallbackBeforeAwake"), Category = "LPrefab")
+		AActor* LoadPrefab(UObject* WorldContextObject, USceneComponent* InParent, const FLPrefab_LoadPrefabCallback& InCallbackBeforeAwake, bool SetRelativeTransformToIdentity = false);
+	/**
+	 * LoadPrefab to create actor.
+	 * Awake function in LGUILifeCycleBehaviour and LPrefabInterface will be called right after LoadPrefab is done.
+	 * @param InParent Parent scene component that the created root actor will be attached to. Can be null so the created root actor will not attach to anyone.
+	 * @param Location Set created root actor's location after load.
+	 * @param Rotation Set created root actor's rotation after load.
+	 * @param Scale Set created root actor's scale after load.
+	 */
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay = "InCallbackBeforeAwake", UnsafeDuringActorConstruction = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm = "InCallbackBeforeAwake"), Category = "LPrefab")
+		AActor* LoadPrefabWithTransform(UObject* WorldContextObject, USceneComponent* InParent, FVector Location, FRotator Rotation, FVector Scale, const FLPrefab_LoadPrefabCallback& InCallbackBeforeAwake);
+	AActor* LoadPrefabWithTransform(UObject* WorldContextObject, USceneComponent* InParent, FVector Location, FQuat Rotation, FVector Scale, const TFunction<void(AActor*)>& InCallbackBeforeAwake);
+	/**
+	 * LoadPrefab to create actor.
+	 * Awake function in LGUILifeCycleBehaviour and LPrefabInterface will be called right after LoadPrefab is done.
+	 * @param InParent Parent scene component that the created root actor will be attached to. Can be null so the created root actor will not attach to anyone.
+	 * @param InReplaceAssetMap Replace source asset to dest before load the prefab.
+	 * @param InReplaceClassMap Replace source class to dest before load the prefab.
+	 */
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay = "InCallbackBeforeAwake", UnsafeDuringActorConstruction = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm = "InCallbackBeforeAwake"), Category = "LPrefab")
+		AActor* LoadPrefabWithReplacement(UObject* WorldContextObject, USceneComponent* InParent, const TMap<UObject*, UObject*>& InReplaceAssetMap, const TMap<UClass*, UClass*>& InReplaceClassMap, const FLPrefab_LoadPrefabCallback& InCallbackBeforeAwake);
+	/**
+	 * LoadPrefab to create actor.
+	 * Awake function in LGUILifeCycleBehaviour and LPrefabInterface will be called right after LoadPrefab is done.
+	 * @param InParent Parent scene component that the created root actor will be attached to. Can be null so the created root actor will not attach to anyone.
+	 * @param InCallbackBeforeAwake This callback function will execute before Awake event, parameter "Actor" is the loaded root actor.
+	 * @param SetRelativeTransformToIdentity Set created root actor's transform to zero after load.
+	 */
+	AActor* LoadPrefab(UWorld* InWorld, USceneComponent* InParent, bool SetRelativeTransformToIdentity = false, const TFunction<void(AActor*)>& InCallbackBeforeAwake = nullptr);
+	/**
+	 * LoadPrefab and keep reference of source objects.
+	 */
+	AActor* LoadPrefabWithExistingObjects(UWorld* InWorld, USceneComponent* InParent
+		, TMap<FGuid, TObjectPtr<UObject>>& InOutMapGuidToObject, TMap<TObjectPtr<AActor>, FLSubPrefabData>& OutSubPrefabMap
+	);
+	bool IsPrefabBelongsToThisSubPrefab(ULPrefab* InPrefab, bool InRecursive);
+#if WITH_EDITOR
+	void CopyDataTo(ULPrefab* TargetPrefab);
+	bool GetIsPrefabVariant()const { return bIsPrefabVariant; }
+	FString GenerateOverallVersionMD5();
+#endif
+private:
+#if WITH_EDITOR
+public:
+	void MakeAgentObjectsInPreviewWorld();
+	void ClearAgentObjectsInPreviewWorld();
+	void RefreshAgentObjectsInPreviewWorld();
+	ULPrefabHelperObject* GetPrefabHelperObject();
+
+	virtual void BeginCacheForCookedPlatformData(const ITargetPlatform* TargetPlatform)override;
+	virtual void WillNeverCacheCookedPlatformDataAgain()override;
+	virtual void ClearCachedCookedPlatformData(const ITargetPlatform* TargetPlatform)override;
+	virtual void PostInitProperties()override;
+	virtual void PostCDOContruct()override;
+	virtual void PostRename(UObject* OldOuter, const FName OldName)override;
+	virtual void PreDuplicate(FObjectDuplicationParameters& DupParams)override;
+	virtual void PostDuplicate(bool bDuplicateForPIE)override;
+	virtual void PostLoad()override;
+	virtual void BeginDestroy()override;
+	virtual void FinishDestroy()override;
+	virtual void PostEditUndo()override;
+	virtual bool IsEditorOnly()const override;
+
+	void SavePrefab(AActor* RootActor
+		, TMap<UObject*, FGuid>& InOutMapObjectToGuid, TMap<TObjectPtr<AActor>, FLSubPrefabData>& InSubPrefabMap
+		, bool InForEditorOrRuntimeUse = true
+	);
+	void RecreatePrefab();
+	/**
+	 * @todo: There is a more efficient way for dealing with sub prefab in runtime: break sub prefab and store all actors (with override parameters) in root prefab.
+	 */
+	//void SavePrefabForRuntime(AActor* RootActor, TMap<AActor*, FLSubPrefabData>& InSubPrefabMap);
+	/**
+	 * LoadPrefab in editor, will not keep reference of source prefab, So we can't apply changes after modify it.
+	 */
+	AActor* LoadPrefabInEditor(UWorld* InWorld, USceneComponent* Parent, bool SetRelativeTransformToIdentity = true);
+	AActor* LoadPrefabInEditor(UWorld* InWorld, USceneComponent* Parent, TMap<TObjectPtr<AActor>, FLSubPrefabData>& OutSubPrefabMap, TMap<FGuid, TObjectPtr<UObject>>& OutMapGuidToObject, bool SetRelativeTransformToIdentity = true);
+#endif
+};
