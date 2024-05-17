@@ -97,7 +97,7 @@ void SLPrefabEditorDetails::Construct(const FArguments& Args, TSharedPtr<FLPrefa
 					.Padding(FMargin(2, 0))
 					[
 						SNew(SButton)
-						.OnClicked_Lambda([=]() {
+						.OnClicked_Lambda([=, this]() {
 							PrefabEditorPtr.Pin()->OpenSubPrefab(CachedActor.Get());
 							return FReply::Handled();
 						})
@@ -117,7 +117,7 @@ void SLPrefabEditorDetails::Construct(const FArguments& Args, TSharedPtr<FLPrefa
 					.Padding(FMargin(2, 0))
 					[
 						SNew(SButton)
-						.OnClicked_Lambda([=]() {
+						.OnClicked_Lambda([=, this]() {
 							PrefabEditorPtr.Pin()->SelectSubPrefab(CachedActor.Get());
 							return FReply::Handled();
 						})
@@ -163,10 +163,10 @@ void SLPrefabEditorDetails::Construct(const FArguments& Args, TSharedPtr<FLPrefa
 										.AutoWidth()
 										[
 											SAssignNew(OverrideParameterEditor, SLPrefabOverrideDataViewer, PrefabEditorPtr.Pin()->GetPrefabManagerObject())
-											.AfterRevertPrefab_Lambda([=](ULPrefab* PrefabAsset) {
+											.AfterRevertPrefab_Lambda([=, this](ULPrefab* PrefabAsset) {
 												RefreshOverrideParameter();
 												})
-											.AfterApplyPrefab_Lambda([=](ULPrefab* PrefabAsset){
+											.AfterApplyPrefab_Lambda([=, this](ULPrefab* PrefabAsset){
 												RefreshOverrideParameter();
 												LPrefabEditorTools::RefreshLevelLoadedPrefab(PrefabAsset);
 												LPrefabEditorTools::RefreshOnSubPrefabChange(PrefabAsset);

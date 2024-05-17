@@ -236,6 +236,7 @@ namespace LPrefabSystem6
 		UE_LOG(LPrefab, Log, TEXT("--GenerateObject take time: %fms"), (FDateTime::Now() - Time).GetTotalMilliseconds());
 		Time = FDateTime::Now();
 #endif
+
 		//properties
 		for (auto& KeyValue : SaveData.SavedObjectData)
 		{

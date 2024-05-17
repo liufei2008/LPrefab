@@ -249,7 +249,7 @@ public:
 		Sequencer = FModuleManager::LoadModuleChecked<ISequencerModule>("Sequencer").CreateSequencer(SequencerInitParams);
 		Content->SetContent(Sequencer->GetSequencerWidget());
 		Sequencer->GetSelectionChangedObjectGuids().AddSP(this, &SLPrefabSequenceEditorWidgetImpl::SyncSelectedWidgetsWithSequencerSelection);
-		Sequencer->OnMovieSceneBindingsChanged().AddLambda([=]() {
+		Sequencer->OnMovieSceneBindingsChanged().AddLambda([=, this]() {
 			if (!WeakSequence.IsValid())return;
 			if (!IsValid(WeakSequence->GetMovieScene()))return;
 			auto& Bindings = WeakSequence->GetMovieScene()->GetBindings();
@@ -431,7 +431,7 @@ public:
 				MenuBuilder.AddMenuEntry(
 					FText::Format(LOCTEXT("ActorLabelFormat", "{0} ({1})"), FText::FromString(Actor->GetActorLabel()), FText::FromString(Actor->GetClass()->GetName())),
 					FText::FromString(Actor->GetName()), FSlateIcon(),
-					FUIAction(FExecuteAction::CreateLambda([=]() {
+					FUIAction(FExecuteAction::CreateLambda([=, this]() {
 						const FScopedTransaction Transaction(LOCTEXT("AddActorToSequencer", "Add actor to Sequencer"));
 						Sequencer->GetHandleToObject(Actor, true);
 						}))
@@ -448,7 +448,7 @@ public:
 				MenuBuilder.AddMenuEntry(
 					FText::Format(LOCTEXT("ComponentLabelFormat", "{0} ({1})"), FText::FromString(Comp->GetName()), FText::FromString(Comp->GetClass()->GetName())),
 					FText::FromString(Comp->GetName()), FSlateIcon(),
-					FUIAction(FExecuteAction::CreateLambda([=]() {
+					FUIAction(FExecuteAction::CreateLambda([=, this]() {
 						const FScopedTransaction Transaction(LOCTEXT("AddComponentToSequencer", "Add component to Sequencer"));
 						Sequencer->GetHandleToObject(Comp, true);
 						}))

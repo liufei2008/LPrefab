@@ -43,7 +43,7 @@ public:
 			if (Comp->IsVisualizationComponent())return;
 			if (auto Actor = Comp->GetOwner())
 			{
-				Manager->OnComponentCreateDelete().Broadcast(true, const_cast<UActorComponent*>(Comp), Actor);
+				Manager->OnComponentCreateDelete().Broadcast(true, Comp, Actor);
 			}
 		}
 	}
@@ -54,7 +54,7 @@ public:
 			if (Comp->IsVisualizationComponent())return;
 			if (auto Actor = Comp->GetOwner())
 			{
-				Manager->OnComponentCreateDelete().Broadcast(false, const_cast<UActorComponent*>(Comp), Actor);
+				Manager->OnComponentCreateDelete().Broadcast(false, Comp, Actor);
 			}
 		}
 	}

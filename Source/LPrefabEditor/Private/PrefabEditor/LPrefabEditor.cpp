@@ -252,7 +252,7 @@ bool FLPrefabEditor::GetAnythingDirty()const
 void FLPrefabEditor::CloseWithoutCheckDataDirty()
 {
 	PrefabHelperObject->SetNothingDirty();
-	this->CloseWindow();
+	this->CloseWindow(EAssetEditorCloseReason::AssetEditorHostClosed);
 }
 
 bool FLPrefabEditor::OnRequestClose()
@@ -772,7 +772,7 @@ void FLPrefabEditor::OnOutlinerActorDoubleClick(AActor* Actor)
 				if (PrimitiveComponent->IsRegistered())
 				{
 					// Some components can have huge bounds but are not visible.  Ignore these components unless it is the only component on the actor 
-					const bool bIgnore = PrimitiveComponents.Num() > 1 && PrimitiveComponent->IgnoreBoundsForEditorFocus();
+					const bool bIgnore = PrimitiveComponents.Num() > 1 && PrimitiveComponent->GetIgnoreBoundsForEditorFocus();
 
 					if (!bIgnore)
 					{
@@ -953,7 +953,7 @@ FReply FLPrefabEditor::TryHandleAssetDragDropOperation(const FDragDropEvent& Dra
 
 				if (OutlinerPtr.IsValid())
 				{
-					ULPrefabManagerObject::AddOneShotTickFunction([=] {
+					ULPrefabManagerObject::AddOneShotTickFunction([=, this] {
 						for (auto& Actor : CreatedActorArray)
 						{
 							OutlinerPtr->UnexpandActorForDragDroppedPrefab(Actor);
