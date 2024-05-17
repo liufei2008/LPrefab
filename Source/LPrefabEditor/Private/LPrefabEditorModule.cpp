@@ -319,10 +319,7 @@ void FLPrefabEditorModule::ShutdownModule()
 
 void FLPrefabEditorModule::AddReferencedObjects(FReferenceCollector& Collector)
 {
-	if (LPrefabSequencerSettings)
-	{
-		Collector.AddReferencedObject(LPrefabSequencerSettings);
-	}
+	Collector.AddReferencedObject(LPrefabSequencerSettings);
 }
 FString FLPrefabEditorModule::GetReferencerName() const 
 {

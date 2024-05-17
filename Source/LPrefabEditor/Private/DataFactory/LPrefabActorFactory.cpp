@@ -72,17 +72,6 @@ void ULPrefabActorFactory::PostSpawnActor(UObject* Asset, AActor* InNewActor)
 		});
 }
 
-void ULPrefabActorFactory::PostCreateBlueprint(UObject* Asset, AActor* CDO)
-{
-	if (Asset != NULL && CDO != NULL)
-	{
-		auto Prefab = CastChecked<ULPrefab>(Asset);
-		auto PrefabActor = CastChecked<ALPrefabLoadHelperActor>(CDO);
-
-		PrefabActor->PrefabAsset = Prefab;
-	}
-}
-
 UObject* ULPrefabActorFactory::GetAssetFromActorInstance(AActor* ActorInstance)
 {
 	check(ActorInstance->IsA(NewActorClass));

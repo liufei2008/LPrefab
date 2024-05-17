@@ -168,9 +168,9 @@ void ULPrefabSequence::UnbindPossessableObjects(const FGuid& ObjectId)
 	ObjectReferences.RemoveBinding(ObjectId);
 }
 
-UObject* ULPrefabSequence::CreateDirectorInstance(IMovieScenePlayer& Player, FMovieSceneSequenceID SequenceID)
+UObject* ULPrefabSequence::CreateDirectorInstance(TSharedRef<const FSharedPlaybackState> SharedPlaybackState, FMovieSceneSequenceID SequenceID)
 {
-	if (auto Actor = CastChecked<AActor>(Player.GetPlaybackContext()))
+	if (auto Actor = CastChecked<AActor>(SharedPlaybackState->GetPlaybackContext()))
 	{
 		if (auto Comp = Actor->FindComponentByClass<ULPrefabSequenceComponent>())
 		{

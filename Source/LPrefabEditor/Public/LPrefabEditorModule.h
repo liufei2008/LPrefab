@@ -103,7 +103,7 @@ private:
 	FDelegateHandle OnInitializeSequenceHandle;
 	FName LPrefabSequenceComponentName;
 	static void OnInitializeSequence(class ULPrefabSequence* Sequence);
-	class USequencerSettings* LPrefabSequencerSettings = nullptr;
+	TObjectPtr<class USequencerSettings> LPrefabSequencerSettings = nullptr;
 
 	/** FGCObject interface */
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
