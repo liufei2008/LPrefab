@@ -65,6 +65,7 @@ void ULPrefabActorFactory::PostSpawnActor(UObject* Asset, AActor* InNewActor)
 		PrefabActor->LoadPrefab(nullptr);
 	}
 	PrefabActor->MoveActorToPrefabFolder();
+	PrefabActor->SetFlags(EObjectFlags::RF_Transient);
 	ULPrefabManagerObject::AddOneShotTickFunction([=]() {
 		GEditor->SelectActor(PrefabActor, false, true, false, true);
 		GEditor->SelectActor(PrefabActor->LoadedRootActor, true, true, false, true);

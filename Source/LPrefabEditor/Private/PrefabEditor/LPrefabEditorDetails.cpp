@@ -255,6 +255,7 @@ void SLPrefabEditorDetails::OnEditorSelectionChanged(UObject* Object)
 			RefreshOverrideParameter();
 			if (SubobjectEditor)
 			{
+				SubobjectEditor->ClearSelection();
 				SubobjectEditor->UpdateTree();
 			}
 		}

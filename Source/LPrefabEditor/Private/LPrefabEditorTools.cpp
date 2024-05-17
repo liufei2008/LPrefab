@@ -28,7 +28,7 @@
 
 #define LOCTEXT_NAMESPACE "LPrefabEditorTools"
 
-PRAGMA_DISABLE_OPTIMIZATION
+UE_DISABLE_OPTIMIZATION
 
 FEditingPrefabChangedDelegate LPrefabEditorTools::OnEditingPrefabChanged;
 FBeforeApplyPrefabDelegate LPrefabEditorTools::OnBeforeApplyPrefab;
@@ -1728,6 +1728,6 @@ void LPrefabEditorTools::ForceGC()
 	GEngine->ForceGarbageCollection();
 }
 
-PRAGMA_ENABLE_OPTIMIZATION
+UE_ENABLE_OPTIMIZATION
 
 #undef LOCTEXT_NAMESPACE
