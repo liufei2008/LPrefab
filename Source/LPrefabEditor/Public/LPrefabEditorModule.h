@@ -13,6 +13,7 @@
 class FToolBarBuilder;
 class FMenuBuilder;
 class FLPrefabNativeSceneOutlinerExtension;
+class ULPrefab;
 DECLARE_LOG_CATEGORY_EXTERN(LPrefabEditor, Log, All);
 
 class LPREFABEDITOR_API FLPrefabEditorModule : public IModuleInterface, public FGCObject

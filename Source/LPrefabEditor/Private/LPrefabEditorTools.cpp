@@ -19,6 +19,7 @@
 #include "LPrefabEditorModule.h"
 #include "PrefabEditor/LPrefabEditor.h"
 #include "LPrefabHeaders.h"
+#include "Logging/MessageLog.h"
 
 #include "Settings/LevelEditorMiscSettings.h"
 #include "Layers/LayersSubsystem.h"
