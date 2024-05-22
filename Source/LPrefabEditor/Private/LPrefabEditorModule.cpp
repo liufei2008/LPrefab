@@ -21,7 +21,7 @@
 #include "Engine/CollisionProfile.h"
 
 #include "LPrefabEditorStyle.h"
-#include "LPrefabEditorCommands.h"
+#include "LPrefabEditorModuleCommands.h"
 #include "LPrefabEditorTools.h"
 
 #include "Thumbnail/LPrefabThumbnailRenderer.h"
@@ -88,7 +88,7 @@ void FLPrefabEditorModule::StartupModule()
 	ISequencerModule& SequencerModule = FModuleManager::Get().LoadModuleChecked<ISequencerModule>("Sequencer");
 	SequenceEditorHandle = SequencerModule.RegisterSequenceEditor(ULPrefabSequence::StaticClass(), MakeUnique<FMovieSceneSequenceEditor_LPrefabSequence>());
 
-	FLPrefabEditorCommands::Register();
+	FLPrefabEditorModuleCommands::Register();
 	
 	PluginCommands = MakeShareable(new FUICommandList);
 		
@@ -96,7 +96,7 @@ void FLPrefabEditorModule::StartupModule()
 
 	//Editor tools
 	{
-		auto editorCommand = FLPrefabEditorCommands::Get();
+		auto editorCommand = FLPrefabEditorModuleCommands::Get();
 
 		//actor action
 		PluginCommands->MapAction(
@@ -257,7 +257,7 @@ void FLPrefabEditorModule::ShutdownModule()
 	// we call this function before unloading the module.
 	FLPrefabEditorStyle::Shutdown();
 
-	FLPrefabEditorCommands::Unregister();
+	FLPrefabEditorModuleCommands::Unregister();
 
 	ULPrefabSequence::OnInitializeSequence().Remove(OnInitializeSequenceHandle);
 	ISequencerModule* SequencerModule = FModuleManager::Get().GetModulePtr<ISequencerModule>("Sequencer");
@@ -552,7 +552,7 @@ void FLPrefabEditorModule::AddEditorToolsToToolbarExtension(FToolBarBuilder& Bui
 TSharedRef<SWidget> FLPrefabEditorModule::MakeEditorToolsMenu(bool InitialSetup, bool ComponentAction, bool PreviewInViewport, bool EditorCameraControl, bool Others)
 {
 	FMenuBuilder MenuBuilder(true, PluginCommands);
-	auto commandList = FLPrefabEditorCommands::Get();
+	auto commandList = FLPrefabEditorModuleCommands::Get();
 
 	//prefab
 	{
