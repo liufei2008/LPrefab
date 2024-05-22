@@ -4,11 +4,11 @@
 
 #include "Framework/Commands/Commands.h"
 
-class FLPrefabEditorCommands : public TCommands<FLPrefabEditorCommands>
+class FLPrefabEditorModuleCommands : public TCommands<FLPrefabEditorModuleCommands>
 {
 public:
 
-	FLPrefabEditorCommands();
+	FLPrefabEditorModuleCommands();
 	// TCommands<> interface
 	virtual void RegisterCommands() override;
 
