@@ -28,7 +28,7 @@ namespace LPrefabSceneOutliner
 
 		virtual void PopulateSearchStrings(const ISceneOutlinerTreeItem& Item, TArray< FString >& OutSearchStrings) const override;
 
-		virtual bool SupportsSorting() const override { return true; }
+		virtual bool SupportsSorting() const override { return false; }
 
 		virtual void SortItems(TArray<FSceneOutlinerTreeItemPtr>& OutItems, const EColumnSortMode::Type SortMode) const override;
 
