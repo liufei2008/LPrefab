@@ -1,16 +1,16 @@
 ﻿// Copyright 2019-Present LexLiu. All Rights Reserved.
 
-#include "LPrefabEditorCommands.h"
+#include "LPrefabEditorModuleCommands.h"
 #include "LPrefabEditorModule.h"
 #include "LPrefabEditorStyle.h"
 
-#define LOCTEXT_NAMESPACE "FLPrefabEditorCommands"
+#define LOCTEXT_NAMESPACE "FLPrefabEditorModuleCommands"
 
-FLPrefabEditorCommands::FLPrefabEditorCommands()
-	: TCommands<FLPrefabEditorCommands>(TEXT("LPrefabEditor"), NSLOCTEXT("Contexts", "LPrefabEditor", "LPrefabEditor Plugin"), NAME_None, FLPrefabEditorStyle::GetStyleSetName())
+FLPrefabEditorModuleCommands::FLPrefabEditorModuleCommands()
+	: TCommands<FLPrefabEditorModuleCommands>(TEXT("LPrefabEditorModule"), NSLOCTEXT("Contexts", "LPrefabEditorModule", "LPrefabEditor Plugin"), NAME_None, FLPrefabEditorStyle::GetStyleSetName())
 {
 }
-void FLPrefabEditorCommands::RegisterCommands()
+void FLPrefabEditorModuleCommands::RegisterCommands()
 {
 	UI_COMMAND(CopyActor, "Copy Actors", "Copy selected actors with hierarchy", EUserInterfaceActionType::Button, FInputChord(EKeys::C, EModifierKey::Shift | EModifierKey::Alt));
 	UI_COMMAND(PasteActor, "Paste Actors", "Paste actors with hierarchy", EUserInterfaceActionType::Button, FInputChord(EKeys::V, EModifierKey::Shift | EModifierKey::Alt));
