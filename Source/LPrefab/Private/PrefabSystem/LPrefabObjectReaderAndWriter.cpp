@@ -6,6 +6,7 @@
 #include "Serialization/BufferArchive.h"
 #include "GameFramework/Actor.h"
 #include "Engine/Blueprint.h"
+#include "GameFramework/Actor.h"
 #include "LPrefabModule.h"
 
 namespace LPrefabSystem
@@ -13,7 +14,7 @@ namespace LPrefabSystem
 	bool LPrefab_ShouldSkipProperty(const FProperty* InProperty)
 	{
 		return
-			InProperty->HasAnyPropertyFlags(CPF_Transient | CPF_DuplicateTransient | CPF_NonPIEDuplicateTransient | CPF_DisableEditOnInstance)
+			InProperty->HasAnyPropertyFlags(CPF_Transient | CPF_NonPIEDuplicateTransient | CPF_DisableEditOnInstance)
 			|| InProperty->IsA<FMulticastDelegateProperty>()
 			|| InProperty->IsA<FDelegateProperty>()
 			;
