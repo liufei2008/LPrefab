@@ -6,6 +6,7 @@
 #include "Serialization/BufferArchive.h"
 #include "GameFramework/Actor.h"
 #include "Engine/Blueprint.h"
+#include "GameFramework/Actor.h"
 #include "LPrefabModule.h"
 
 namespace LPrefabSystem
@@ -14,6 +15,24 @@ namespace LPrefabSystem
 		: FLPrefabObjectWriter(Bytes, InSerializer, InSkipPropertyNames)
 	{
 		
+	}
+	bool FLPrefabDuplicateObjectWriter::ShouldSkipProperty(const FProperty* InProperty) const
+	{
+		if (InProperty->HasAnyPropertyFlags(CPF_Transient | CPF_DuplicateTransient | CPF_NonPIEDuplicateTransient | CPF_DisableEditOnInstance)
+			|| InProperty->IsA<FMulticastDelegateProperty>()
+			|| InProperty->IsA<FDelegateProperty>()
+			)
+		{
+			return true;
+		}
+		if (SkipPropertyNames.Contains(InProperty->GetFName())
+			&& CurrentIsMemberProperty(*this)//Skip property only support UObject's member property
+			)
+		{
+			return true;
+		}
+
+		return false;
 	}
 	bool FLPrefabDuplicateObjectWriter::SerializeObject(UObject* Object)
 	{
@@ -106,6 +125,24 @@ namespace LPrefabSystem
 		: FLPrefabObjectReader(Bytes, InSerializer, InSkipPropertyNames)
 	{
 
+	}
+	bool FLPrefabDuplicateObjectReader::ShouldSkipProperty(const FProperty* InProperty) const
+	{
+		if (InProperty->HasAnyPropertyFlags(CPF_Transient | CPF_DuplicateTransient | CPF_NonPIEDuplicateTransient | CPF_DisableEditOnInstance)
+			|| InProperty->IsA<FMulticastDelegateProperty>()
+			|| InProperty->IsA<FDelegateProperty>()
+			)
+		{
+			return true;
+		}
+		if (SkipPropertyNames.Contains(InProperty->GetFName())
+			&& CurrentIsMemberProperty(*this)//Skip property only support UObject's member property
+			)
+		{
+			return true;
+		}
+
+		return false;
 	}
 	bool FLPrefabDuplicateObjectReader::SerializeObject(UObject*& Object, bool CanSerializeClass)
 	{
