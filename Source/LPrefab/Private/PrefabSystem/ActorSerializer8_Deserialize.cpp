@@ -343,6 +343,7 @@ namespace LPrefabSystem8
 				for (auto& Actor : AllActors)
 				{
 					Actor->RerunConstructionScripts();
+					Actor->ReregisterAllComponents();
 				}
 			}
 		}
