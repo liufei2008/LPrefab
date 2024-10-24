@@ -97,6 +97,16 @@ FLPrefabEditorScene::FLPrefabEditorScene(ConstructionValues CVS) :FPrefabScene(C
 		if (AActor* ItemActor = *ActorItr)
 		{
 			WorldDefaultActors.Add(ItemActor);
+			//from 5.4 the ParticleEventManager is visible in PrefabEditor, so I set these properties to hide it in PrefabEditor
+			if (ItemActor->GetClass()->GetName() == TEXT("ParticleEventManager"))
+			{
+				ItemActor->bHiddenEd = true;
+				ItemActor->bHiddenEdLayer = true;
+				ItemActor->bHiddenEdLevel = true;
+
+				auto bListedInSceneOutliner_Property = FindFProperty<FBoolProperty>(AActor::StaticClass(), TEXT("bListedInSceneOutliner"));
+				bListedInSceneOutliner_Property->SetPropertyValue_InContainer(ItemActor, false);
+			}
 		}
 	}
 }
